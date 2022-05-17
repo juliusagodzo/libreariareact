@@ -1,5 +1,6 @@
 public class Book {
-    private String Autore,Titolo,ISBN,Quantity;
+    private String Autore, Titolo, ISBN, Quantity;
+    private int Price;
 
     public String getQuantity() {
         return Quantity;
@@ -31,5 +32,9 @@ public class Book {
 
     public void setISBN(String ISBN) {
         this.ISBN = ISBN;
+    }
+
+    public void setPrice(int prezzo) {
+        this.Price = prezzo;
     }
 }

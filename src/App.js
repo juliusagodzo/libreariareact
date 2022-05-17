@@ -9,6 +9,7 @@ import DeleteBook from "./components/DeleteBook"
 import RentBook from "./components/RentBook"
 import ReturnBook from "./components/ReturnBook"
 import RentExpiries from "./components/RentExpiries"
+import GetAutorePrice from "./components/GetAutorePrice"
 
 const App = () => {
   window.onbeforeunload = null;
@@ -26,7 +27,8 @@ const App = () => {
                 <Route path="/delete" element={<DeleteBook/>} />
                 <Route path="/rent" element={<RentBook/>} />
                 <Route path="/return" element={<ReturnBook/>} />
-                <Route path="/expiries" element={<RentExpiries/>} />
+                <Route path="/expiries" element={<RentExpiries />} />
+                <Route path="/autorePrice" element={<GetAutorePrice />} />
               </Routes>
             </Col>
           </Row>

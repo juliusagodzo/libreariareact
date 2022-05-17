@@ -9,6 +9,7 @@ class UpdateBook extends Component {
       bookISBN: "",
       bookTitle: "",
       bookAuthor: "",
+      bookPrice: "",
       added: null,
       error: " "
     };
@@ -19,7 +20,8 @@ class UpdateBook extends Component {
     var details = {
         'ISBN': this.state.bookISBN,
         'Autore': this.state.bookAuthor,
-        'Titolo': this.state.bookTitle
+        'Titolo': this.state.bookTitle,
+        'Prezzo': this.state.bookPrice
     };
     
     var formBody = [];
@@ -103,6 +105,16 @@ class UpdateBook extends Component {
                   placeholder="Titolo"
                   value={this.state.bookTitle}
                   onChange={(e) => this.setState({ bookTitle: e.target.value })}
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Prezzo Libro</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Prezzo"
+                  value={this.state.bookPrice}
+                  onChange={(e) => this.setState({ bookPrice: e.target.value })}
                 />
               </Form.Group>
               <Button variant="primary" type="submit" onClick={this.handleSubmit}>

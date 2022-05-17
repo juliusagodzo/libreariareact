@@ -23,8 +23,8 @@ import javax.ws.rs.core.Response;
 @Path("/book")
 public class Library {
     private final String error = "Server error, contact administrators";
-    private boolean checkParams(String isbn,String autore, String titolo){
-        return (isbn == null || isbn.trim().length() == 0) || (titolo == null || titolo.trim().length() == 0) || (autore == null || autore.trim().length() == 0);
+    private boolean checkParams(String isbn,String autore, String titolo, int prezzo){
+        return (isbn == null || isbn.trim().length() == 0) || (titolo == null || titolo.trim().length() == 0) || (autore == null || autore.trim().length() == 0) || ( prezzo == 0);
     }
 
     @GET
@@ -46,6 +46,7 @@ public class Library {
                 book.setAutore(results.getString("Autore"));
                 book.setISBN(results.getString("ISBN"));
                 book.setQuantity(results.getString("Quantity"));
+                book.setPrice(results.getInt("Prezzo"));
                 books.add(book);
 
             }
@@ -64,21 +65,22 @@ public class Library {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response update(@FormParam("ISBN") String isbn,
                            @FormParam("Titolo")String titolo,
-                           @FormParam("Autore") String autore){
-        if(checkParams(isbn, titolo, autore)) {
+                           @FormParam("Autore") String autore,
+                           @FormParam("Prezzo") int prezzo){
+        if(checkParams(isbn, titolo, autore, prezzo)) {
             String obj = new Gson().toJson("Parameters must be valid");
             return Response.serverError().entity(obj).build();
         }
         final String QUERY = "UPDATE Libri SET Titolo = ?, Autore = ? WHERE ISBN = ?";
         final String[] data = Database.getData();
         try(
-
-                Connection conn = DriverManager.getConnection(data[0], data[1], data[2]);
-                PreparedStatement pstmt = conn.prepareStatement( QUERY )
+            Connection conn = DriverManager.getConnection(data[0], data[1], data[2]);
+            PreparedStatement pstmt = conn.prepareStatement( QUERY )
         ) {
             pstmt.setString(1,titolo);
             pstmt.setString(2,autore);
-            pstmt.setString(3,isbn);
+            pstmt.setString(3, isbn);
+            pstmt.setInt(4, prezzo);
             pstmt.execute();
         }catch (SQLException e){
             e.printStackTrace();
@@ -95,21 +97,23 @@ public class Library {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response create(@FormParam("ISBN") String isbn,
                            @FormParam("Titolo")String titolo,
-                           @FormParam("Autore") String autore){
-        if(checkParams(isbn, titolo, autore)) {
+                           @FormParam("Autore") String autore,
+                           @FormParam("Prezzo") int prezzo){
+        if(checkParams(isbn, titolo, autore, prezzo)) {
             String obj = new Gson().toJson("Parameters must be valid");
             return Response.serverError().entity(obj).build();
         }
-        final String QUERY = "INSERT INTO Libri(ISBN,Titolo,Autore) VALUES(?,?,?)";
+        final String QUERY = "INSERT INTO Libri(ISBN,Titolo,Autore,Prezzo) VALUES(?,?,?)";
         final String[] data = Database.getData();
         try(
 
                 Connection conn = DriverManager.getConnection(data[0], data[1], data[2]);
                 PreparedStatement pstmt = conn.prepareStatement( QUERY )
         ) {
-            pstmt.setString(1,isbn);
-            pstmt.setString(2,autore);
-            pstmt.setString(3,titolo);
+            pstmt.setString(1, titolo);
+            pstmt.setString(2, autore);
+            pstmt.setString(3, isbn);
+            pstmt.setInt(4, prezzo);
             pstmt.execute();
         }catch (SQLException e){
             e.printStackTrace();
@@ -227,7 +231,6 @@ public class Library {
         final String[] data = Database.getData();
         String isbn = "";
         try(
-
                 Connection conn = DriverManager.getConnection(data[0], data[1], data[2]);
                 PreparedStatement pstmt = conn.prepareStatement( QUERY )
         ) {
@@ -278,19 +281,18 @@ public class Library {
     @Path("/nearexpiry")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response getExpiries(){
+    public Response getExpiries() {
         final String QUERY = "SELECT * FROM Prestiti WHERE Scadenza BETWEEN ? AND ?";
         final List<Rentals> rentals = new ArrayList<>();
         final LocalDateTime dateNow = LocalDateTime.now();
         final String[] data = Database.getData();
-        try(
+        try (
                 Connection conn = DriverManager.getConnection(data[0], data[1], data[2]);
-                PreparedStatement pstmt = conn.prepareStatement( QUERY )
-        ) {
+                PreparedStatement pstmt = conn.prepareStatement(QUERY)) {
             pstmt.setString(1, String.valueOf(dateNow.minusDays(3)));
             pstmt.setString(2, String.valueOf(dateNow.plusDays(3)));
-            ResultSet results =  pstmt.executeQuery();
-            while (results.next()){
+            ResultSet results = pstmt.executeQuery();
+            while (results.next()) {
                 Rentals rent = new Rentals();
                 rent.setID(results.getString("ID"));
                 rent.setStart(results.getString("Inizio"));
@@ -298,11 +300,44 @@ public class Library {
                 rent.setISBN(results.getString("ISBN"));
                 rentals.add(rent);
             }
-        }catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
             String obj = new Gson().toJson(error);
             return Response.serverError().entity(obj).build();
         }
+        String obj = new Gson().toJson(rentals);
+        return Response.status(200).entity(obj).build();
+    }
+    
+    @GET
+    @Path("/autoreprezzo")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response getAutorePrice(@FormParam("prezzo") Integer prezzo) {
+        final Integer userPrice = prezzo;
+        final String QUERY = "SELECT Autore, Prezzo FROM Libri WHERE Prezzo < + "+ userPrice;
+        final List<Rentals> rentals = new ArrayList<>();
+        final LocalDateTime dateNow = LocalDateTime.now();
+        final String[] data = Database.getData();
+        try (
+            Connection conn = DriverManager.getConnection(data[0], data[1], data[2]);
+            PreparedStatement pstmt = conn.prepareStatement(QUERY)) {
+                pstmt.setString(1, String.valueOf(dateNow.minusDays(3)));
+                pstmt.setString(2, String.valueOf(dateNow.plusDays(3)));
+                ResultSet results = pstmt.executeQuery();
+                while (results.next()) {
+                    Rentals rent = new Rentals();
+                    rent.setID(results.getString("ID"));
+                    rent.setStart(results.getString("Inizio"));
+                    rent.setExpiry(results.getString("Scadenza"));
+                    rent.setISBN(results.getString("ISBN"));
+                    rentals.add(rent);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                String obj = new Gson().toJson(error);
+                return Response.serverError().entity(obj).build();
+            }
         String obj = new Gson().toJson(rentals);
         return Response.status(200).entity(obj).build();
     }

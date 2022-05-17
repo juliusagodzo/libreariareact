@@ -105,6 +105,16 @@ class AddBook extends Component {
                   onChange={(e) => this.setState({ bookTitle: e.target.value })}
                 />
               </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Prezzo Libro</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Prezzo"
+                  value={this.state.bookPrice}
+                  onChange={(e) => this.setState({ bookTitle: e.target.value })}
+                />
+              </Form.Group>
               <Button variant="primary" type="submit" onClick={this.handleSubmit}>
                 Invio
               </Button>
